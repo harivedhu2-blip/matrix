@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Chat</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #060625;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* 🔥 TITLE HEADER */
+    #header {
+      text-align: center;
+      padding: 15px;
+      background: #020617;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    #header h1 {
+      margin: 0;
+      color: #c522a2;
+    }
+
+    #header p {
+      margin: 5px 0;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    /* 🔧 TOP PANEL */
+    #topPanel {
+      padding: 10px;
+      background: #020617;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    input, select {
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      outline: none;
+      background: #1e293b;
+      color: white;
+      width: 150px;
+    }
+
+    /* 💬 CHAT */
+    #chatBox {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .msg {
+      padding: 12px;
+      border-radius: 10px;
+      max-width: 70%;
+      white-space: pre-wrap;
+    }
+
+    .user {
+      background: #c52291;
+      align-self: flex-end;
+    }
+
+    .bot {
+      background: #1e293b;
+      align-self: flex-start;
+    }
+
+    /* 🔥 INPUT BAR */
+    #bottomBar {
+      display: flex;
+      padding: 15px;
+      background: #020617;
+    }
+
+    #promptInput {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      background: #1e293b;
+      color: white;
+      resize: none;
+      height: 50px;
+    }
+
+    button {
+      margin-left: 10px;
+      padding: 12px 20px;
+      background: #22c55e;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<!-- 🔥 HEADER TITLE -->
+<div id="header">
+  <h1>MARKIX</h1>
+  <p>Create high-converting content instantly</p>
+</div>
+
+<!-- 🔧 SETTINGS -->
+<div id="topPanel">
+
+  <input id="brand" placeholder="Brand Name">
+
+  <select id="contentType">
+    <option value="">Platform</option>
+    <option>YouTube</option>
+    <option>Instagram</option>
+    <option>Facebook</option>
+    <option>Blog</option>
+    <option>Email</option>
+    <option>Landing Page</option>
+  </select>
+
+  <input id="tone" placeholder="Tone">
+
+  <input id="audience" placeholder="Audience">
+
+  <input id="cta" placeholder="CTA">
+
+</div>
+
+<!-- 💬 CHAT -->
+<div id="chatBox"></div>
+
+<!-- 🔥 INPUT -->
+<div id="bottomBar">
+  <textarea id="promptInput" placeholder="Type your message..."></textarea>
+  <button onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+
+const chatBox = document.getElementById("chatBox");
+const input = document.getElementById("promptInput");
+
+/* Add message */
+function addMessage(text, type) {
+    const div = document.createElement("div");
+    div.className = "msg " + type;
+    div.innerText = text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+/* ENTER key */
+input.addEventListener("keydown", function(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+/* SEND */
+async function sendMessage() {
+
+    const message = input.value.trim();
+    if (!message) return;
+
+    const brand = document.getElementById("brand").value;
+    const contentType = document.getElementById("contentType").value;
+    const tone = document.getElementById("tone").value;
+    const audience = document.getElementById("audience").value;
+    const cta = document.getElementById("cta").value;
+
+    input.value = "";
+
+    addMessage(message, "user");
+
+    const loading = document.createElement("div");
+    loading.className = "msg bot";
+    loading.innerText = "Generating...";
+    chatBox.appendChild(loading);
+
+    try {
+
+        const prompt = `
+User Input: ${message}
+
+Brand: ${brand || "Not specified"}
+Platform: ${contentType || "General"}
+Tone: ${tone || "Friendly"}
+Audience: ${audience || "General"}
+CTA: ${cta || "Not specified"}
+
+Generate high-quality marketing content.
+`;
+
+        const res = await fetch("http://127.0.0.1:5001/generate", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                brand,
+                contentType,
+                tone,
+                audience,
+                cta,
+                customPrompt: prompt
+            })
+        });
+
+        const data = await res.json();
+
+        loading.remove();
+        addMessage(data.output, "bot");
+
+    } catch (err) {
+        loading.remove();
+        addMessage("❌ Error generating content", "bot");
+    }
+}
+
+</script>
+
+</body>
+</html>
