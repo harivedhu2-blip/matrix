@@ -6,12 +6,12 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# 🔥 Groq AI
+# 🔥 Groq AI (API KEY from environment)
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 @app.route("/")
 def home():
-    return "AI Backend Running 🚀"
+    return "🚀 AI Backend Running Successfully"
 
 @app.route("/generate", methods=["POST"])
 def generate():
@@ -26,13 +26,13 @@ def generate():
     custom_prompt = data.get("customPrompt", "").strip()
     topic = data.get("topic", "").strip()
 
-    # 🔥 Smart defaults
+    # 🔥 Defaults (if empty)
     if not tone:
         tone = "Friendly"
     if not content_type:
         content_type = "General Content"
 
-    # 🔥 Build prompt
+    # 🔥 Build Prompt
     prompt = f"""
 You are an expert AI marketing assistant.
 
@@ -44,7 +44,7 @@ Platform: {content_type}
 Tone: {tone}
 Audience: {audience if audience else "General audience"}
 CTA: {cta if cta else "Not specified"}
-Topic: {topic}
+Topic: {topic if topic else "General"}
 
 Extra Instructions:
 {custom_prompt if custom_prompt else "None"}
@@ -65,7 +65,7 @@ Create complete ready-to-use content.
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a strict AI marketing agent. Never ask for missing inputs."
+                    "content": "You are a strict AI marketing agent that always follows instructions."
                 },
                 {
                     "role": "user",
@@ -88,5 +88,12 @@ Create complete ready-to-use content.
         }), 500
 
 
+# 🔥 IMPORTANT: Render Fix
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    port = int(os.environ.get("PORT", 10000))
+
+    app.run(
+        host="0.0.0.0",
+        port=port,
+        debug=False
+    )
